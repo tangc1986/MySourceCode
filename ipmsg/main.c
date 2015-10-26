@@ -86,7 +86,7 @@ void* receiver(void *option)
   struct sockaddr_in peer;
   int mSock = *(int*)option, len;
   char buf[COMLEN];
-  
+
   while(1)
   {
     if (recvfrom(mSock, buf, sizeof(buf), 0, (struct sockaddr*)&peer, &len)<0)
@@ -102,7 +102,7 @@ void* receiver(void *option)
     mList.comTail->next = peercom;
     mList.comTail = peercom;
 
-    sem_post(&waitNonEmpty); 
+    sem_post(&waitNonEmpty);
     pthread_mutex_unlock(&msgMutex);
   }
 }
@@ -122,17 +122,17 @@ void* processor(void *option)
   {
     sem_wait(&waitNonEmpty);
     pthread_mutex_lock(&msgMutex);
-    
+
     peercom = mList.comHead.next;
     mList.comHead.next = mList.comHead.next->next;
     if (mList.comHead.next == NULL)
       mList.comTail = &mList.comHead;
-    
-    sem_post(&waitNonFull); 
+
+    sem_post(&waitNonFull);
     pthread_mutex_unlock(&msgMutex);
-    
+
     memcpy(&com.peer, &peercom->peer, sizeof(com.peer));
-    
+
     comMode = GET_MODE(peercom->commandNo);
     comOpt = GET_OPT(peercom->commandNo);
 
@@ -143,7 +143,7 @@ void* processor(void *option)
       com.commandNo = IPMSG_RECVMSG;
       sendMsg(&com); //发送回应
     }
-    
+
     switch (comMode)
     {
     case IPMSG_SENDMSG: //发送命令
@@ -163,19 +163,19 @@ void* processor(void *option)
         curGet->packetNo = peercom->packetNo;
         curGet->fileList.next = peercom->fileList;
         peercom->fileList = NULL; //
-        
+
         preGet = &getFHead;
         pthread_mutex_lock(&getFMutex);
         while ((preGet->next!=NULL) &&
                (preGet->next->packetNo!=curGet->packetNo))
           preGet = preGet->next;
-        
+
         if (preGet->next==NULL)
           preGet->next = curGet;
-        
+
         pthread_mutex_unlock(&getFMutex);
       }
-      
+
       break;
     case IPMSG_ANSENTRY: //
       cur = (user*)malloc(sizeof(user));
@@ -222,7 +222,7 @@ void* processor(void *option)
         preSend = preSend->next;
         curSend = curSend->next;
       }
-      
+
       if (curSend!=NULL)
       {
         curSend->cancelled = 1;
@@ -247,7 +247,7 @@ void* processor(void *option)
     free(peercom);
     peercom = NULL;
   }
-  
+
 }
 
 //数据清理
@@ -256,7 +256,7 @@ void destroyer()
   gsNode *preSend, *curSend, *preGet, *curGet;
   filenode *curFile;
   user *curUsr, *preUsr;
-  
+
   preSend = &sendFHead;
   pthread_mutex_lock(&sendFMutex);
   curSend = sendFHead.next;
@@ -269,12 +269,12 @@ void destroyer()
       free(curSend);
     }
     else preSend = preSend->next;
-    
+
     curSend = preSend->next;
   }
   pthread_mutex_unlock(&sendFMutex);
-  
-  
+
+
   preGet = &getFHead;
   pthread_mutex_lock(&getFMutex);
   curGet = getFHead.next;
@@ -287,7 +287,7 @@ void destroyer()
       free(curGet);
     }
     else preGet = preGet->next;
-    
+
     curGet = preGet->next;
   }
   pthread_mutex_unlock(&getFMutex);
@@ -303,9 +303,9 @@ void destroyer()
       free(curUsr);
     }
     else preUsr = preUsr->next;
-    
+
     curUsr = preUsr->next;
-    
+
   }
   pthread_mutex_unlock(&usrMutex);
 }
@@ -317,13 +317,13 @@ void* cleaner(void *option)
   gsNode *preSend, *curSend, *preGet, *curGet;
   filenode *curFile;
   user *curUsr, *preUsr;
-  
+
   while(1)
   {
     sleep(30); //半分钟一次
     destroyer();
   }
-  
+
 }
 
 //初始化udp和tcp
@@ -334,13 +334,13 @@ int initSvr()
   const int on=1;
 
   msgSock = socket(AF_INET, SOCK_DGRAM, 0);  //UDP for Msg
-  
+
   tcpSock = socket(AF_INET, SOCK_STREAM, 0); //TCP for File
-  
+
   server.sin_family = AF_INET;
   server.sin_port = htons(IPMSG_DEFAULT_PORT);
   server.sin_addr.s_addr = htonl(INADDR_ANY);
-  
+
   if (setsockopt(msgSock, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on))<0)
   {
     printf("initSvr: Socket options set error.\n");
@@ -364,7 +364,7 @@ int initSvr()
     printf("initSvr: Tcp listen error.\n");
     exit(1);
   }
-  
+
   //printf("Commands: list(ls) talk(tk) sendfile(sf)\n"
   //"Commands: getfile(gf) refresh(rf) ceaseSend(cs) quit(q)\n");
   printf(IMHELP);
@@ -376,29 +376,30 @@ int main (int argc, char *argv [])
   int *fSock;
   int tmp;
   pthread_attr_t attr;
-  
-  uname(&sysName);
-  pwd = getpwuid(getuid());
-  getcwd(workDir, sizeof(workDir));
+
+  uname(&sysName);      // 获取当前内核名称和其它信息
+  pwd = getpwuid(getuid());     // 通过用户的uid查找用户的passwd数据(getuid: 返回一个调用程序的真实用户ID)
+  getcwd(workDir, sizeof(workDir));     // 获取当前工作目录(绝对路径)
 
   utf8 = 0;
-  if (setlocale(LC_CTYPE, ""))
-    if (!strcmp(nl_langinfo(CODESET), "UTF-8"))
-      utf8 = 1;
-  
-  initGsNode(&sendFHead);
+  if (setlocale(LC_CTYPE, ""))                          // ???
+    if (!strcmp(nl_langinfo(CODESET), "UTF-8"))         // ???
+      utf8 = 1;                                         // ???
+
+  initGsNode(&sendFHead);       // 初始化发送文件列表
+  /* 初始化消息接收列表 */
   initCommand(&mList.comHead, IPMSG_NOOPERATION);
   mList.comTail = &mList.comHead;
   userList.next = NULL;
   sem_init(&waitNonEmpty, 0, 0);
   sem_init(&waitNonFull, 0, MSGLIMIT);
 
-  initSvr();
-  pthread_create(&procer, NULL, &processor, &msgSock); 
-  pthread_create(&recver, NULL, &receiver, &msgSock);
-  pthread_create(&iter, NULL, &interacter, NULL);
-  pthread_create(&cler, NULL, &cleaner, NULL);
-  login();
+  initSvr();    // 初始化udp和tcp
+  pthread_create(&procer, NULL, &processor, &msgSock);      // 创建udp包处理线程
+  pthread_create(&recver, NULL, &receiver, &msgSock);        // 创建udp包接收线程
+  pthread_create(&iter, NULL, &interacter, NULL);             // 创建用户交互线程
+  pthread_create(&cler, NULL, &cleaner, NULL);                // 创建清理数据线程??
+  login();      // 登录，向网络中通告自己
 
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
@@ -412,7 +413,7 @@ int main (int argc, char *argv [])
       *fSock = tmp;
       pthread_create(&fler, &attr, &sendData, fSock);
     }
-    
+
   }
 
   pthread_join(procer, NULL);
