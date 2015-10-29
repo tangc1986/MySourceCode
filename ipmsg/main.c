@@ -347,7 +347,7 @@ int initSvr()
     exit(1);
   }
 
-  if (bind(msgSock, (struct sockaddr*)&server, sizeof(server))<0)
+  if (bind(msgSock, (struct sockaddr*)&server, sizeof(server))<0)   // 为什么要把server强转类型?刚开始类型就设为sockaddr不行吗??
   {
     printf("initSvr: Udp socket bind error.\n");
     exit(1);

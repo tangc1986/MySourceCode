@@ -27,20 +27,20 @@
 //发送udp包
 void* sendMsg(command* com)
 {
-  char buf[COMLEN];
-  int len, temp;
-  
-  msgCreater(buf, com, sizeof(buf));
-  len = strlen(buf);
-  if (com->commandNo & IPMSG_FILEATTACHOPT)
+    char buf[COMLEN];
+    int len, temp;
+
+    msgCreater(buf, com, sizeof(buf));
+    len = strlen(buf);
+    if (com->commandNo & IPMSG_FILEATTACHOPT)   // 文件附件选项
     {
-      temp = strlen(buf+len+1);
-      
-      sendto(msgSock, buf, len+temp+2, 0,
-             (struct sockaddr*)&com->peer, sizeof(com->peer));
-     }
-  else sendto(msgSock, buf, len+1, 0,
-              (struct sockaddr*)&com->peer, sizeof(com->peer));
+        temp = strlen(buf+len+1);
+
+        sendto(msgSock, buf, len+temp+2, 0,
+                (struct sockaddr*)&com->peer, sizeof(com->peer));
+    }
+    else sendto(msgSock, buf, len+1, 0,
+                    (struct sockaddr*)&com->peer, sizeof(com->peer));
 }
 
 //////////////////////////////////////////////////
@@ -60,24 +60,24 @@ int saySth()
   printf("\n*Talking mode\n"
          "*Continuous Enter to send msg,\n"
          "*Ctrl+D to quit conversation.\n");
-  
+
   pthread_mutex_lock(&usrMutex);
   count = listUsers(pusers, &userList, sizeof(pusers)/sizeof(pusers[0]), 0);
   pthread_mutex_unlock(&usrMutex);
-  
+
   who = inputNo(1, count, 1, "Please input user No.[1]:");
-  
+
   if (who>0)
   {
     cur = pusers[who-1];
-    
+
     initCommand(&com, IPMSG_SENDMSG|IPMSG_SENDCHECKOPT);
     memcpy(&com.peer, &cur->peer, sizeof(com.peer));
-    
+
     remainder = MSGLEN;
     pos = 0;
     sended = 1;
-    
+
     while(1)
     {
       printf("(talking with %s):", cur->name);
@@ -104,16 +104,16 @@ int saySth()
         remainder = sizeof(com.additional);
         pos = 0;
       }
-      
+
     }
   }
-  
+
     puts("\nEnd conversation.\n");
-    
+
     pthread_mutex_lock(&usrMutex);
     unListUsers(pusers, count);
     pthread_mutex_unlock(&usrMutex);
-  
+
 }
 
 /////////////////////////////////////////////////
@@ -132,11 +132,11 @@ int selectFiles()
   filenode *fntmp, *head, *tail;
   gsNode *newTask;
   user *pusers[50];
-  
+
   printf("\n*Sending mode\n"
          "*Continuous Enter to send file,\n"
          "*Ctrl+D to quit.\n");
-  
+
   pthread_mutex_lock(&usrMutex);
   count = listUsers(pusers, &userList, sizeof(pusers)/sizeof(pusers[0]), 0);
   pthread_mutex_unlock(&usrMutex);
@@ -145,22 +145,22 @@ int selectFiles()
 
   if (who>0)
   {
-    
+
     cur = pusers[who-1];
-  
+
     initCommand(&com, IPMSG_SENDMSG|IPMSG_FILEATTACHOPT);
     memcpy(&com.peer, &cur->peer, sizeof(com.peer));
-    
+
     printf("To send file to %s(%s).\nPlease select file to send:\n", cur->name, cur->host);
-    
+
     newTask = (gsNode*)malloc(sizeof(gsNode));
     initGsNode(newTask);
     newTask->packetNo = com.packetNo;
-    
+
     fileNo = 0;
     head = com.fileList;
     tail = com.fileList;
-    
+
     while (1)
     {
       if (fgets(fileName, FILENAME, stdin) == NULL) //取消传输
@@ -177,10 +177,10 @@ int selectFiles()
       }
 
        transfStr(fileName, 0); //去除前后空白字符
-       
+
       if (fileName[0]=='\0')
         break;
-      
+
      if (lstat(fileName, &fileAttr)<0)
       {
         printf("Get file attributes error.\n");
@@ -197,7 +197,7 @@ int selectFiles()
         printf("Unsupported file type.\n");
         continue;
       }
-      
+
       if (tail == NULL)
         head = tail = (filenode*)malloc(sizeof(filenode));
       else
@@ -205,7 +205,7 @@ int selectFiles()
         tail->next = (filenode*)malloc(sizeof(filenode));
         tail = tail->next;
       }
-      
+
       tail->next = NULL;
       tail->fileNo = fileNo;
       strncpy(tail->fileName, fileName, sizeof(tail->fileName));
@@ -215,13 +215,13 @@ int selectFiles()
 
       fileNo++;
     }
-    
+
     if (head==NULL)
     {
       if (newTask!=NULL)
         free(newTask);
     }
-    else 
+    else
     {
       newTask->fileList.next = com.fileList = head;
       pthread_mutex_lock(&sendFMutex); //lock
@@ -240,7 +240,7 @@ int selectFiles()
   pthread_mutex_lock(&usrMutex);
   unListUsers(pusers, count);
   pthread_mutex_unlock(&usrMutex);
-  
+
 }
 
 //文件或文件夹发送
@@ -256,12 +256,12 @@ void* sendData(void* option)
   sigset_t mask, oldmask;
 
   free(option);
-  
+
   sigemptyset(&mask);
   sigaddset(&mask, SIGPIPE);
   if (pthread_sigmask(SIG_BLOCK, &mask, &oldmask) != 0)
     printf("SIG_BLOCK error.\n");
-  
+
   //以tcp的方式接受传输请求
   for (i=0;i<4;i++)
   {
@@ -270,7 +270,7 @@ void* sendData(void* option)
       printf("Transfer cancelled.\n");
       shutdown(fSock, SHUT_RDWR);
       return NULL;
-    }  
+    }
   }
 
   if (readDelimiter(fSock, buf, RECFRG, ':')<=0)
@@ -279,7 +279,7 @@ void* sendData(void* option)
     shutdown(fSock, SHUT_RDWR);
     return NULL;
   }
-  
+
   commandNo = atoi(buf);
 
   if (!(commandNo & IPMSG_GETFILEDATA))
@@ -288,15 +288,15 @@ void* sendData(void* option)
     shutdown(fSock, SHUT_RDWR);
     return NULL;
   }
-  
-  
+
+
   if (readDelimiter(fSock, buf, RECFRG, ':')<=0)
   {
     printf("Transfer cancelled.\n");
     shutdown(fSock, SHUT_RDWR);
     return NULL;
   }
-  
+
   sscanf(buf, "%x", &packetNo);
 
   if (readDelimiter(fSock, buf, RECFRG, ':')<0)
@@ -308,7 +308,7 @@ void* sendData(void* option)
   sscanf(buf, "%x", &fileNo);
 
   pthread_mutex_lock(&sendFMutex);
-  
+
   preSend = &sendFHead;
   curSend = sendFHead.next;
 
@@ -318,13 +318,13 @@ void* sendData(void* option)
     preSend = preSend->next;
     curSend = curSend->next;
   }
-  
+
   if (curSend != NULL)
   {
     curSend->transferring = 1;
     curSend->tcpSock = fSock;
     pthread_mutex_unlock(&sendFMutex);
-    
+
     curFile = curSend->fileList.next;
     preFile = &curSend->fileList;
     while ((curFile!=NULL) && (curFile->fileNo!=fileNo))
@@ -332,7 +332,7 @@ void* sendData(void* option)
       preFile = preFile->next;
       curFile = curFile->next;
     }
-    
+
     if (curFile != NULL)
     {
       getFileName(fileName, curFile->fileName, sizeof(fileName));
@@ -347,9 +347,9 @@ void* sendData(void* option)
           return NULL;
         }
         sscanf(buf, "%x", &offset);
-        
+
         sfile = fopen(curFile->fileName, "r");
-        
+
         while ((realCount = fread(buf, 1, RECFRG, sfile))>0)
           if (writen(fSock, buf, realCount)<0)
           {
@@ -358,7 +358,7 @@ void* sendData(void* option)
           }
         break;
       case 2: //发送文件夹
-        curErr = traverseDir(fSock, curFile->fileName, sendDir); 
+        curErr = traverseDir(fSock, curFile->fileName, sendDir);
         break;
       default:
         break;
@@ -378,7 +378,7 @@ void* sendData(void* option)
     printf("Transfer canceled.\n");
     return NULL;
   }
-  
+
   if ((curErr<0) || (errno == ECONNRESET) || (errno == EPIPE)) //error or connection reset by peer
   {
     if (curFile!=NULL)
@@ -391,15 +391,15 @@ void* sendData(void* option)
     printf("Peer needs retransfer.\n");
     return NULL;
   }
-  
+
   if (curFile!=NULL)
   {
     printf("\n%s is transferred.\n", fileName);
     preFile->next = curFile->next;
     free(curFile);
   }
-  
-  
+
+
   if (curSend!=NULL && curSend->fileList.next == NULL)
   {
     preSend->next = curSend->next;
@@ -412,7 +412,7 @@ void* sendData(void* option)
     curSend->tcpSock = -1;
   }
   pthread_mutex_unlock(&sendFMutex);
-  
+
   shutdown(fSock, SHUT_RDWR);
 }
 
@@ -435,16 +435,16 @@ int sendDir(int fSock, const char* fullpath, int fileSize, int fileType)
     u2g(strtmp, sizeof(strtmp),
         fileName, sizeof(fileName));
   else strncpy(fileName, strtmp, sizeof(fileName));
-  
+
   headLen = (strlen(fileName)+1) + (HL_HEADERSIZE+1) +
     (HL_FILETYPE+1) + (HL_FILESIZE+1) + 2*(HL_1416+1);
   packetNo = (unsigned int)time(NULL); //简化了，属性值并不准确
   snprintf(strformat, sizeof(strformat), "%%0%dx:%%s:%%0%dx:%%0%dx:14=%%0%dx:16=%%0%dx:",
            HL_HEADERSIZE, HL_FILESIZE, HL_FILETYPE, HL_1416-3, HL_1416-3);
-  
+
   tmp = snprintf(strdata, sizeof(strdata), strformat,
            headLen, fileName, fileSize, fileType, packetNo, packetNo);
-  
+
   switch (fileType)
   {
   case 1:
@@ -463,7 +463,7 @@ int sendDir(int fSock, const char* fullpath, int fileSize, int fileType)
     fclose(sf);
     break;
   case 2:
-   
+
     //break;
   case 3:
     if (writen(fSock, strdata, tmp)<0)
@@ -483,14 +483,14 @@ int traverseDir(int fSock, char* fullpath, Mysnd snd) //FILENAME指定了fullpath的
   char *ptr;
   DIR  *dp;
   int tmp;
-  
+
 
   if (lstat(fullpath, &fst)<0)
   {
     printf("\nDir: get attributes error.\n");
     return -1;
   }
-  
+
   if (S_ISREG(fst.st_mode))
     return snd(fSock, fullpath, fst.st_size, 1);
   else if (S_ISDIR(fst.st_mode))
@@ -502,7 +502,7 @@ int traverseDir(int fSock, char* fullpath, Mysnd snd) //FILENAME指定了fullpath的
 
   tmp = strlen(fullpath);
   ptr = fullpath + tmp;
-  
+
   *ptr++ = '/'; //tmp+1
   *ptr = '\0';
 
@@ -548,9 +548,9 @@ int listSFiles(gsNode **list, gsNode *gs, int size)
     }
     gs = gs->next;
   }
-  
+
   return tmp;
-  
+
 }
 
 //取消文件传输
@@ -566,7 +566,7 @@ int ceaseSend()
     pthread_mutex_lock(&sendFMutex);
     count = listSFiles(gsList, sendFHead.next, sizeof(gsList)/sizeof(gsList[0])-1);
     pthread_mutex_unlock(&sendFMutex);
-    
+
     if (count == 0)
       return 0;
     else
@@ -614,13 +614,13 @@ int recvFiles()
   pthread_t gFile;
   filenode *curFile;
   pthread_attr_t attr;
-  
+
   while(1)
   {
     pthread_mutex_lock(&getFMutex);
     count = listGFiles(gsList, getFHead.next, sizeof(gsList)/sizeof(gsList[0])-1);
     pthread_mutex_unlock(&getFMutex);
-    
+
     if (count == 0)
       return -1;
     else
@@ -646,7 +646,7 @@ int recvFiles()
 
     if (index<0)
       return -1;
-    
+
     while(1)
     {
       printf("Where do you want to save?(Ctrl+D to quit)\nTarget dir[.]:");
@@ -654,20 +654,20 @@ int recvFiles()
         return -1;
 
       transfStr(buf, 0); //去除前后空白字符
-      
+
       if (buf[0]=='\0')
       {
         buf[0]='.';
         buf[1]='\0';
       }
-      
+
       if ((stat(buf, &dirAttr)<0) ||
           !S_ISDIR(dirAttr.st_mode) ||
           (access(buf, W_OK)<0))
         printf("Invalid directory. Please input again.\n");
       else break;
     }
-    
+
     cur = *(gsList+index-1);
     tmp = strlen(buf);
     pthread_mutex_lock(&getFMutex);
@@ -710,7 +710,7 @@ void* getData(void* option)
       printf("\nUnsupported file type.\n%s fails to be transfered.\n", cur->fileName);
       break;
     }
-    
+
     if (tmp<0)
     {
       initCommand(&com, IPMSG_RELEASEFILES);
@@ -724,7 +724,7 @@ void* getData(void* option)
       printf("\n%s fails to be transfered.\n", cur->fileName);
       return NULL;
     }
-    
+
     printf("\n%s is transferred.\n", cur->fileName);
     head->next = cur->next;
     free(cur);
@@ -734,7 +734,7 @@ void* getData(void* option)
   gList->cancelled = 1; //其实是已经完成
   gList->transferring = 0;
   pthread_mutex_unlock(&getFMutex);
-  
+
   printf("File reception done.\n");
 }
 
@@ -752,20 +752,20 @@ int getFile(void* option, gsNode *gList)
 
   initCommand(&com, IPMSG_GETFILEDATA);  //Regular file
   snprintf(com.additional, MSGLEN, "%x:%x:%x", gList->packetNo, head->fileNo, offset);
-  
+
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
   bzero(&peer, sizeof(peer));
   peer.sin_family = AF_INET;
   peer.sin_port = htons(IPMSG_DEFAULT_PORT);
   memcpy(&peer.sin_addr, &gList->peer.sin_addr, sizeof(peer.sin_addr));
-  
+
   if (connect(sockfd, (struct sockaddr*)&peer, sizeof(peer))<0)
   {
     printf("File connect error.\n");
     return -1;
   }
-  
+
   msgCreater(buf, &com, sizeof(buf));
 
   if (writen(sockfd, buf, strlen(buf)+1)<0)
@@ -787,12 +787,12 @@ int getFile(void* option, gsNode *gList)
       printf("getFile: data transfer error.\n");
       return -1;
     }
-    
+
     fwrite(recvs, 1, readBytes, recvFile);
     fileSize -= readBytes;
   }
   fclose(recvFile);
-  
+
   close(sockfd);
   return 0;
 }
@@ -802,7 +802,7 @@ int parseHeader(filenode *pfn, char * recvs)
 {
   char *strhead, *strtmp, gMsg[FILENAME];
   int i=0;
-  
+
   strhead = recvs;
   while (i<3) //分析前3段
   {
@@ -814,7 +814,7 @@ int parseHeader(filenode *pfn, char * recvs)
     switch (i)
     {
     case 0:
-      
+
       strncpy(gMsg, strhead, sizeof(gMsg));
       delColon(gMsg, sizeof(gMsg));
       if (utf8)
@@ -844,7 +844,7 @@ int parseHeader(filenode *pfn, char * recvs)
   }
 
   strncpy(pfn->otherAttrs, strhead, sizeof(pfn->otherAttrs));
-  
+
   return 0;
 }
 
@@ -860,18 +860,18 @@ int getDir(void *option, gsNode *gList)
   FILE* recvFile;
 
   strncpy(fullPath, gList->targetDir, sizeof(fullPath));
-  
+
   initCommand(&com, IPMSG_GETDIRFILES); //Direcotry
-  
+
   snprintf(com.additional, MSGLEN, "%x:%x:%x", gList->packetNo, head->fileNo, offset);
-  
+
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
   bzero(&peer, sizeof(peer));
   peer.sin_family = AF_INET;
   peer.sin_port = htons(IPMSG_DEFAULT_PORT);
   memcpy(&peer.sin_addr, &gList->peer.sin_addr, sizeof(peer.sin_addr));
-  
+
   if (connect(sockfd, (struct sockaddr*)&peer, sizeof(peer))<0)
   {
     printf("File connect error.\n");
@@ -879,10 +879,10 @@ int getDir(void *option, gsNode *gList)
   }
 
   msgCreater(buf, &com, sizeof(buf));
-  
+
   if (writen(sockfd, buf, strlen(buf)+1)<0)
     return -1;
-  
+
   do
   {
     tmp = strlen(fullPath);
@@ -896,20 +896,20 @@ int getDir(void *option, gsNode *gList)
       fullPath[tmp] = '/';
       fullPath[tmp+1] = '\0';
     }
-  
+
     readBytes = readDelimiter(sockfd, hSize, HSIZE, ':');
     sscanf(hSize, "%x", &headerSize);
     if (headerSize<=0 || headerSize<=readBytes || headerSize>RECFRG) //保护、防止溢出
       return -1;
     readn(sockfd, recvs, headerSize-readBytes);
     recvs[headerSize-readBytes]='\0';
-    
+
     if (parseHeader(&fn, recvs)<0)
     {
       printf("getDir: Parse protocol failed.\n");
       return -1;
     }
-    
+
     switch (fn.fileType & 0x03)
     {
     case IPMSG_FILE_REGULAR:
@@ -920,7 +920,7 @@ int getDir(void *option, gsNode *gList)
         printf("Open error.\n");
         return -1;
       }
-      
+
       sscanf(fn.fileSize, "%x", &fileSize);
       while (fileSize>0)
       {
@@ -930,14 +930,14 @@ int getDir(void *option, gsNode *gList)
           printf("File read error.\n");
           return -1;
         }
-        
+
         fwrite(recvs, 1, readBytes, recvFile);
         fileSize -= readBytes;
       }
       fclose(recvFile);
       getParentPath(fullPath, sizeof(fullPath));
       break;
-      
+
     case IPMSG_FILE_DIR:
       strncat(fullPath, fn.fileName, sizeof(fullPath)-tmp-1);
       tmp = strlen(fullPath);
@@ -952,26 +952,26 @@ int getDir(void *option, gsNode *gList)
         fullPath[tmp] = '/';
         fullPath[tmp+1] = '\0';
       }
-      
+
       if (mkdir(fullPath, S_IRUSR|S_IWUSR|S_IXUSR))
       {
         printf("getDir: mkdir failed.\n");
         return -1;
       }
-      
+
       dirDepth++;
       break;
-      
+
     case IPMSG_FILE_RETPARENT:
       getParentPath(fullPath, sizeof(fullPath));
       dirDepth--;
       break;
-      
+
     default:
       printf("Unsupported file type.\n");
       break;
     }
-    
+
   }while(dirDepth>0);
 
   //close(sockfd);
@@ -994,9 +994,9 @@ int listGFiles(gsNode **list, gsNode *gs, int size)
     }
     gs = gs->next;
   }
-  
+
   return tmp;
-  
+
 }
 
 
@@ -1007,17 +1007,17 @@ int login()
   command com;
 
   initCommand(&com, IPMSG_BR_ENTRY);
-  
+
   com.peer.sin_family = AF_INET;
   com.peer.sin_port = htons(IPMSG_DEFAULT_PORT);
-  
+
   if (inet_pton(AF_INET, allHosts, &com.peer.sin_addr)<0)
     printf("login: Ip error.\n");
-  
+
   strncpy(com.additional, pwd->pw_name, MSGLEN);
-  
+
   sendMsg(&com);
-  
+
 }
 
 //退出
@@ -1026,16 +1026,16 @@ int logout()
   command com;
 
   initCommand(&com, IPMSG_BR_EXIT);
-  
+
   com.peer.sin_family = AF_INET;
   com.peer.sin_port = htons(IPMSG_DEFAULT_PORT);
-  
+
   if (inet_pton(AF_INET, allHosts, &com.peer.sin_addr)<0)
     printf("logout: error\n");
 
   strncpy(com.additional, pwd->pw_name, MSGLEN);
-  
+
   sendMsg(&com);
   printf("Bye!\n");
-  
+
 }

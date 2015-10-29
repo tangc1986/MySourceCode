@@ -18,7 +18,7 @@ ssize_t readn(int fd, void *buf, size_t count)
   char *strtmp;
   ssize_t reval, realcount=0;
   strtmp = (char *)buf;
-  
+
   while (count>0)
   {
     reval = read(fd, strtmp, count);
@@ -35,7 +35,7 @@ ssize_t readn(int fd, void *buf, size_t count)
     }
     else break;
   }
-  
+
   return realcount;
 }
 
@@ -44,7 +44,7 @@ ssize_t readDelimiter(int fd, void *buf, ssize_t count, char ch)
   char *strtmp, *buftmp=buf;
   ssize_t reval, realcount=0;
   strtmp = (char *)buf;
-  
+
   while (realcount<count)
   {
     reval = read(fd, strtmp, 1);
@@ -57,17 +57,17 @@ ssize_t readDelimiter(int fd, void *buf, ssize_t count, char ch)
       realcount++;
       if (*strtmp++ == ch)
         break;
-      
+
       continue;
     }
     else break;
   }
-  
+
   if (strtmp>buftmp)
     *(strtmp--) = '\0';
   else *buftmp = '\0';
-  
-  return realcount; 
+
+  return realcount;
 }
 
 ssize_t writen(int fd, const void *buf, size_t count)
@@ -83,7 +83,7 @@ ssize_t writen(int fd, const void *buf, size_t count)
       if (errno == EINTR)
         continue;
       else return -1;
-      
+
     count -= reval;
     strtmp += reval;
   }
@@ -95,7 +95,7 @@ ssize_t readline(int fd, void *buf, int size)
   char *strtmp;
   ssize_t reval, realcount=0;
   strtmp = (char *)buf;
- 
+
   while(size>1)
   {
     reval = read(fd, strtmp, 1);
@@ -134,9 +134,10 @@ void delColon(char* dest, int size) //:: ---> :
 
   if (flag)
     strncpy(dest, buf, size);
-  
+
 }
 
+/* 增加冒号?? */
 void addColon(char* dest, int size) //: ---> ::
 {
   char buf[FILENAME], *pb, *pd;
@@ -160,7 +161,7 @@ void addColon(char* dest, int size) //: ---> ::
 
   if (flag)
     strncpy(dest, buf, size);
-  
+
 }
 
 ///////////////////////////////////////////////
@@ -172,7 +173,7 @@ int inputNo(int min, int max, int def, char *prom)
 
   if (min>max)
     return -1;
-  
+
   if ((def<min)||(def>max))
     def = min;
 
@@ -183,7 +184,7 @@ int inputNo(int min, int max, int def, char *prom)
       return -1;
 
     transfStr(which, 0);
-    
+
     if (which[0]=='\0')
     {
       index = def;
@@ -191,12 +192,12 @@ int inputNo(int min, int max, int def, char *prom)
     }
 
     tmp = strlen(which);
-    
+
     if (which[tmp-1]=='\n')
       which[--tmp]='\0';
-    
+
     index = atoi(which);
-    
+
     if (index<min || index>max)
       printf("Invalid input. Please input again.\n");
     else break;
@@ -218,7 +219,7 @@ int getFileName(char* dest, const char* fullpath, int size)//get filename from f
   head = strtmp;
   while (tail>=fullpath && *tail!='/') //得到filename的倒序
     *head++ = *tail--;
-  
+
   head--;
   while (size>0 && head>=strtmp)
   {
@@ -240,7 +241,7 @@ int getParentPath(char *dest, int size)
 
   if (size<2)
     return -1;
-  
+
   if ((last = strrchr(dest, '/'))==NULL)
     strncpy(dest, "./", size);
   else if (*(last+1)!='\0')
@@ -248,7 +249,7 @@ int getParentPath(char *dest, int size)
   else
   {
     ptr = last - 1;
-    
+
     while (ptr>=dest)
     {
       if (*ptr=='/' && *(ptr+1)!='/')
@@ -264,7 +265,7 @@ int getParentPath(char *dest, int size)
         strncpy(dest, "./", size);
       else dest[1] = '\0';
   }
-  
+
   return 0;
 }
 
@@ -275,16 +276,16 @@ void transfStr(char *dest, int flag)
 {
   char *ptr;
   int len;
-  
+
   ptr = dest;
-  
+
   while (isspace(*ptr))
     ptr++;
 
   len = strlen(ptr);
   if (ptr > dest)
     memmove(dest, ptr, len+1);
-  
+
   ptr = dest+len-1;
 
   while (isspace(*ptr))

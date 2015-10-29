@@ -18,7 +18,7 @@
 const char allHosts[] = "255.255.255.255"; //广播用地址
 int msgSock; //消息
 int tcpSock; //文件
-struct passwd* pwd; 
+struct passwd* pwd;
 struct utsname sysName;
 char workDir[FILENAME];
 int utf8;
@@ -40,7 +40,7 @@ int msgParser(char *msg, int size, command* com)//, struct sockaddr_in *peer)
   char outStr[COMLEN];
   int min;
   int index=0,colonCount, tmp;
-  
+
   if ((msg==NULL)||(com==NULL))
     return -1;
 
@@ -50,14 +50,14 @@ int msgParser(char *msg, int size, command* com)//, struct sockaddr_in *peer)
     start = outStr;
   }
   else start = msg;
-  
+
   bzero(com, sizeof(command));
   while (index<5)
   {
     pos = strchr(start, ':');
     if (pos==NULL)
       break;
-    
+
     colonCount=1;
     while(*(pos+1) == ':')
     {
@@ -69,7 +69,7 @@ int msgParser(char *msg, int size, command* com)//, struct sockaddr_in *peer)
       start = pos+1;
       continue;
     }
-      
+
     switch (index)
     {
     case 0:
@@ -80,12 +80,12 @@ int msgParser(char *msg, int size, command* com)//, struct sockaddr_in *peer)
       break;
     case 2:
       min = sizeof(com->senderName)<(pos-start)?sizeof(com->senderName):(pos-start);
-      memcpy(com->senderName, start, min); 
-      com->senderName[min]='\0'; 
+      memcpy(com->senderName, start, min);
+      com->senderName[min]='\0';
       break;
     case 3:
       min = sizeof(com->senderHost)<(pos-start)?sizeof(com->senderHost):(pos-start);
-      memcpy(com->senderHost, start, min); 
+      memcpy(com->senderHost, start, min);
       com->senderHost[min]='\0';
       break;
     case 4:
@@ -106,10 +106,10 @@ int msgParser(char *msg, int size, command* com)//, struct sockaddr_in *peer)
   }
 
   index++;
-  
+
   return index;
-  
-    
+
+
 }
 
 /*生成要发送的message*/
@@ -118,10 +118,10 @@ int msgCreater(char* msg, command* com, size_t msgLen)
   int len, curLen, tmp, fileNo;
   char fileName[FILENAME], dest[COMLEN];
   filenode *curFile;
-  
-  if ((dest==NULL)||(com==NULL))
+
+  if ((dest==NULL)||(com==NULL))        // 这里为什么要判断dest，难道这个局部数组变量还会获取不到内存?
     return -1;
-  
+
   len = snprintf(dest, sizeof(dest), "%d:%d:%s:%s:%d:%s",
                   com->version,
                   com->packetNo,
@@ -142,9 +142,9 @@ int msgCreater(char* msg, command* com, size_t msgLen)
         return -1;
       }
 
-      addColon(fileName, sizeof(fileName));
-      
-      
+      addColon(fileName, sizeof(fileName));     // 增加冒号??
+
+
       if (curFile->fileType == 1)
         curLen = snprintf(dest+len+1, tmp, "%d:%s:%s:%s:1:\a",
                           fileNo, fileName, curFile->fileSize, curFile->mtime);
@@ -161,13 +161,13 @@ int msgCreater(char* msg, command* com, size_t msgLen)
       len += curLen;
       tmp -= curLen;
     }
-    
+
   }
 
   if (utf8)
     u2g(dest, sizeof(dest), msg, msgLen);
   else strncpy(msg, dest, msgLen);
-  
+
   return 0;
 }
 
@@ -179,7 +179,7 @@ filenode* getFilelist(const char* comFiles)
   const char *pos, *backsplash_a, *colon, *start;
   filenode *head=NULL, *tail=NULL;
   int index, colonCount=0, temp, min;
-  
+
   assert((comFiles!=NULL));
 
   start = comFiles;
@@ -196,11 +196,11 @@ filenode* getFilelist(const char* comFiles)
       tail->next = (filenode*)malloc(sizeof(filenode));
       tail = tail->next;
     }
-    
+
     tail->next = NULL;
 
     index = 0;
-    
+
     pos = start;
     while(1)
     {
@@ -218,7 +218,7 @@ filenode* getFilelist(const char* comFiles)
         pos = colon+1;
         continue;
       }
-      
+
       switch(index)
       {
       case 0:
