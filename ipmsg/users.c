@@ -20,30 +20,30 @@ int insertUser(user *uList, user *target)
 
   if (target->peer.sin_addr.s_addr == htonl(INADDR_ANY))
     return -1;
-  
+
   pre = uList;
   cur = uList->next;
-  
+
   while (cur!=NULL)
   {
     compName=strncmp(cur->name, target->name, sizeof(cur->name));
     compHost=strncmp(cur->host, target->host, sizeof(cur->host));
     compAddr=memcmp(&cur->peer, &target->peer, sizeof(cur->peer));
-    
+
     if (compName>0)
       break;
-    
+
     if ((compName==0) && (compHost==0) && (compAddr==0))
     {
       if (cur->exit == 1)
-        cur->exit = 0;
+        cur->exit = 0;          // ÖØĞÂÀûÓÃ?
       return -1;
     }
 
     pre = cur;
     cur = cur->next;
   }
-  
+
   target->next = pre->next;
   pre->next = target;
   return 0;
@@ -73,7 +73,7 @@ int listUsers(user **pusers, user *uList, int size, int flag) //flag==1Ê±£¬½ö½öÁ
 
   if ((pusers==NULL)&&(flag==0))
     return 0;
-  
+
   if (flag==0)
     bzero(pusers, sizeof(user*)*size);
   printf("\n\n**********************************************\n");
@@ -95,14 +95,14 @@ int listUsers(user **pusers, user *uList, int size, int flag) //flag==1Ê±£¬½ö½öÁ
     }
     cur = cur->next;
   }
-  
+
   printf("**********************************************\n\n");
-  
+
   if (order==0)
     printf("\nNo other users found.\nPlease refresh(rf) or list(ls) later.\n\n");
 
   return order;
-  
+
 }
 
 int unListUsers(user **pusers, int num)
@@ -112,7 +112,7 @@ int unListUsers(user **pusers, int num)
 
   if (pusers == NULL)
     return -1;
-  
+
   while (num-->0)
   {
     cur = *pusers++;
@@ -129,7 +129,7 @@ int unListUsers(user **pusers, int num)
 user* findUser(user *uList, int index)
 {
   user *cur=uList;
-  
+
   while((index>0) && (cur!=NULL))
   {
     index--;
@@ -155,18 +155,18 @@ int delUser(user *uList, command *peercom)
     compName=strncmp(cur->name, peercom->senderName, sizeof(cur->name));
     compHost=strncmp(cur->host, peercom->senderHost, sizeof(cur->host));
     compAddr=memcmp(&cur->peer, &peercom->peer, sizeof(cur->peer));
-    
+
     if (compName>0)
       return -1;
 
     if ((compName==0) && (compHost==0) && (compAddr==0))
     {
-      cur->exit = 1;
+      cur->exit = 1;        // ´òÉÏÍË³ö±ê¼Ç
       break;
     }
     cur = cur->next;
   }
-  
+
   return 0;
-  
+
 }

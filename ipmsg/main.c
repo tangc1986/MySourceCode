@@ -94,7 +94,7 @@ void* receiver(void *option)
     peercom = (command*)malloc(sizeof(command));
     bzero(peercom, sizeof(command));
     msgParser(buf, sizeof(buf), peercom);
-    memcpy(&peercom->peer, &peer, sizeof(peercom->peer));
+    memcpy(&peercom->peer, &peer, sizeof(peercom->peer));       // 对端地址?
 
     sem_wait(&waitNonFull);
     pthread_mutex_lock(&msgMutex);
@@ -195,7 +195,7 @@ void* processor(void *option)
       com.packetNo = (unsigned int)time(NULL);
       com.commandNo = IPMSG_ANSENTRY;//
       strncpy(com.additional, pwd->pw_name, MSGLEN);
-      sendMsg(&com);
+      sendMsg(&com);        // 这个消息怎么没有目的地?
 
       cur = (user*)malloc(sizeof(user));
       memcpy(&cur->peer, &peercom->peer, sizeof(cur->peer));
@@ -231,7 +231,7 @@ void* processor(void *option)
       }
       pthread_mutex_unlock(&sendFMutex);
       break;
-    case IPMSG_BR_EXIT:
+    case IPMSG_BR_EXIT:         // 这个是本地还是远端的下线消息?怎么只需要删除用户
       pthread_mutex_lock(&usrMutex);
       delUser(&userList, peercom);
       pthread_mutex_unlock(&usrMutex);
@@ -262,7 +262,7 @@ void destroyer()
   curSend = sendFHead.next;
   while (curSend!=NULL)
   {
-    if ((curSend->cancelled == 1) && (curSend->transferring==0))
+    if ((curSend->cancelled == 1) && (curSend->transferring==0))    // 其他情况怎么处理?
     {
       preSend->next = curSend->next;
       deGsNode(curSend);
@@ -314,7 +314,7 @@ void destroyer()
 
 void* cleaner(void *option)
 {
-  gsNode *preSend, *curSend, *preGet, *curGet;
+  gsNode *preSend, *curSend, *preGet, *curGet;      // 这么多局部变量是做什么的?
   filenode *curFile;
   user *curUsr, *preUsr;
 

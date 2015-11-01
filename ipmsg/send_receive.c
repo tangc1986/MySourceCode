@@ -62,10 +62,10 @@ int saySth()
          "*Ctrl+D to quit conversation.\n");
 
   pthread_mutex_lock(&usrMutex);
-  count = listUsers(pusers, &userList, sizeof(pusers)/sizeof(pusers[0]), 0);
+  count = listUsers(pusers, &userList, sizeof(pusers)/sizeof(pusers[0]), 0);    // 每个用户都打上use标记?
   pthread_mutex_unlock(&usrMutex);
 
-  who = inputNo(1, count, 1, "Please input user No.[1]:");
+  who = inputNo(1, count, 1, "Please input user No.[1]:");  // 怎么参数里面还有需要打印的字符串
 
   if (who>0)
   {
@@ -101,7 +101,7 @@ int saySth()
           sended = 1;
           printf("Message sent.\n");
         }
-        remainder = sizeof(com.additional);
+        remainder = sizeof(com.additional);     // 这里为什么要重新获取缓冲区大小
         pos = 0;
       }
 
@@ -111,7 +111,7 @@ int saySth()
     puts("\nEnd conversation.\n");
 
     pthread_mutex_lock(&usrMutex);
-    unListUsers(pusers, count);
+    unListUsers(pusers, count);     // 清楚use标记
     pthread_mutex_unlock(&usrMutex);
 
 }
@@ -214,7 +214,7 @@ int selectFiles()
       tail->fileType = fileType;
 
       fileNo++;
-    }
+    }       // 可以连续发送多个文件?
 
     if (head==NULL)
     {
@@ -255,7 +255,7 @@ void* sendData(void* option)
   FILE* sfile;
   sigset_t mask, oldmask;
 
-  free(option);
+  free(option);     // 为什么上来就free??
 
   sigemptyset(&mask);
   sigaddset(&mask, SIGPIPE);
@@ -263,7 +263,7 @@ void* sendData(void* option)
     printf("SIG_BLOCK error.\n");
 
   //以tcp的方式接受传输请求
-  for (i=0;i<4;i++)
+  for (i=0;i<4;i++)     // 为什么是4次
   {
     if (readDelimiter(fSock, buf, RECFRG, ':')<=0)
     {
