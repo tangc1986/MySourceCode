@@ -13,8 +13,8 @@
  *    1 - benchmark failed (server is not on-line)
  *    2 - bad param
  *    3 - internal error, fork failed
- * 
- */ 
+ *
+ */
 #include "socket.c"
 #include <unistd.h>
 #include <sys/param.h>
@@ -77,7 +77,7 @@ static void build_request(const char *url);
 static void alarm_handler(int signal)
 {
    timerexpired=1;
-}	
+}
 
 static void usage(void)
 {
@@ -99,57 +99,67 @@ static void usage(void)
 	"  -V|--version             Display program version.\n"
 	);
 };
+
 int main(int argc, char *argv[])
 {
- int opt=0;
- int options_index=0;
- char *tmp=NULL;
+    int opt=0;
+    int options_index=0;
+    char *tmp=NULL;
 
- if(argc==1)
- {
-	  usage();
-          return 2;
- } 
+    if(argc==1)
+    {
+        usage();
+        return 2;
+    }
 
- while((opt=getopt_long(argc,argv,"912Vfrt:p:c:?h",long_options,&options_index))!=EOF )
- {
-  switch(opt)
-  {
-   case  0 : break;
-   case 'f': force=1;break;
-   case 'r': force_reload=1;break; 
-   case '9': http10=0;break;
-   case '1': http10=1;break;
-   case '2': http10=2;break;
-   case 'V': printf(PROGRAM_VERSION"\n");exit(0);
-   case 't': benchtime=atoi(optarg);break;	     
-   case 'p': 
-	     /* proxy server parsing server:port */
-	     tmp=strrchr(optarg,':');
-	     proxyhost=optarg;
-	     if(tmp==NULL)
-	     {
-		     break;
-	     }
-	     if(tmp==optarg)
-	     {
-		     fprintf(stderr,"Error in option --proxy %s: Missing hostname.\n",optarg);
-		     return 2;
-	     }
-	     if(tmp==optarg+strlen(optarg)-1)
-	     {
-		     fprintf(stderr,"Error in option --proxy %s Port number is missing.\n",optarg);
-		     return 2;
-	     }
-	     *tmp='\0';
-	     proxyport=atoi(tmp+1);break;
-   case ':':
-   case 'h':
-   case '?': usage();return 2;break;
-   case 'c': clients=atoi(optarg);break;
-  }
- }
- 
+    /**************************************************************************/
+    /* int getopt_long(int argc, char * const argv[],const char *optstring, const struct option *longopts,int *longindex);
+    /* 函数中的argc和argv通常直接从main()的两个参数传递而来。
+    /* optsting是选项参数组成的字符, 表示可以接受的参数。例如，"a:b:cd"，表示可以接受的参数是a,b,c,d，其中，a和b参数后面跟有更多的参数值。(例如：-a host -b name)
+    /* 可以是下列元素:
+    /* 1.单个字符，表示选项，
+    /* 2.单个字符后接一个冒号：表示该选项后必须跟一个参数。参数紧跟在选项后或者以空格隔开。该参数的指针赋给optarg。
+    /* 3 单个字符后跟两个冒号，表示该选项后可以有参数也可以没有参数。如果有参数，参数必须紧跟在选项后不能以空格隔开。该参数的指针赋给optarg。（这个特性是GNU的扩张）。
+    /**************************************************************************/
+    while((opt=getopt_long(argc,argv,"912Vfrt:p:c:?h",long_options,&options_index))!=EOF )
+    {
+        switch(opt)
+        {
+            case  0 : break;
+            case 'f': force=1;break;
+            case 'r': force_reload=1;break;
+            case '9': http10=0;break;
+            case '1': http10=1;break;
+            case '2': http10=2;break;
+            case 'V': printf(PROGRAM_VERSION"\n");exit(0);
+            case 't': benchtime=atoi(optarg);break;
+            case 'p':
+            /* proxy server parsing server:port */
+            tmp=strrchr(optarg,':');
+            proxyhost=optarg;
+            if(tmp==NULL)
+            {
+                break;
+            }
+            if(tmp==optarg)
+            {
+                fprintf(stderr,"Error in option --proxy %s: Missing hostname.\n",optarg);
+                return 2;
+            }
+            if(tmp==optarg+strlen(optarg)-1)
+            {
+                fprintf(stderr,"Error in option --proxy %s Port number is missing.\n",optarg);
+                return 2;
+            }
+            *tmp='\0';
+            proxyport=atoi(tmp+1);break;
+            case ':':
+            case 'h':
+            case '?': usage();return 2;break;
+            case 'c': clients=atoi(optarg);break;
+        }
+    }
+
  if(optind==argc) {
                       fprintf(stderr,"webbench: Missing URL!\n");
 		      usage();
@@ -217,7 +227,7 @@ void build_request(const char *url)
 	  case METHOD_OPTIONS: strcpy(request,"OPTIONS");break;
 	  case METHOD_TRACE: strcpy(request,"TRACE");break;
   }
-		  
+
   strcat(request," ");
 
   if(NULL==strstr(url,"://"))
@@ -231,7 +241,7 @@ void build_request(const char *url)
 	 exit(2);
   }
   if(proxyhost==NULL)
-	   if (0!=strncasecmp("http://",url,7)) 
+	   if (0!=strncasecmp("http://",url,7))
 	   { fprintf(stderr,"\nOnly HTTP protocol is directly supported, set --proxy for others.\n");
              exit(2);
            }
@@ -286,20 +296,20 @@ void build_request(const char *url)
   if(http10>1)
 	  strcat(request,"Connection: close\r\n");
   /* add empty line at end */
-  if(http10>0) strcat(request,"\r\n"); 
+  if(http10>0) strcat(request,"\r\n");
   // printf("Req=%s\n",request);
 }
 
 /* vraci system rc error kod */
 static int bench(void)
 {
-  int i,j,k;	
+  int i,j,k;
   pid_t pid=0;
   FILE *f;
 
   /* check avaibility of target server */
   i=Socket(proxyhost==NULL?host:proxyhost,proxyport);
-  if(i<0) { 
+  if(i<0) {
 	   fprintf(stderr,"\nConnect to server failed. Aborting benchmark.\n");
            return 1;
          }
@@ -360,7 +370,7 @@ static int bench(void)
   } else
   {
 	  f=fdopen(mypipe[0],"r");
-	  if(f==NULL) 
+	  if(f==NULL)
 	  {
 		  perror("open pipe for reading failed.");
 		  return 3;
@@ -421,21 +431,21 @@ void benchcore(const char *host,const int port,const char *req)
        }
        return;
     }
-    s=Socket(host,port);                          
-    if(s<0) { failed++;continue;} 
+    s=Socket(host,port);
+    if(s<0) { failed++;continue;}
     if(rlen!=write(s,req,rlen)) {failed++;close(s);continue;}
-    if(http10==0) 
+    if(http10==0)
 	    if(shutdown(s,1)) { failed++;close(s);continue;}
-    if(force==0) 
+    if(force==0)
     {
             /* read all available data from socket */
 	    while(1)
 	    {
-              if(timerexpired) break; 
+              if(timerexpired) break;
 	      i=read(s,buf,1500);
               /* fprintf(stderr,"%d\n",i); */
-	      if(i<0) 
-              { 
+	      if(i<0)
+              {
                  failed++;
                  close(s);
                  goto nexttry;
