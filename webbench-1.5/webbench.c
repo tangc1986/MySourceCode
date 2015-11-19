@@ -52,21 +52,21 @@ char request[REQUEST_SIZE];
 
 static const struct option long_options[]=
 {
- {"force",no_argument,&force,1},
- {"reload",no_argument,&force_reload,1},
- {"time",required_argument,NULL,'t'},
- {"help",no_argument,NULL,'?'},
- {"http09",no_argument,NULL,'9'},
- {"http10",no_argument,NULL,'1'},
- {"http11",no_argument,NULL,'2'},
- {"get",no_argument,&method,METHOD_GET},
- {"head",no_argument,&method,METHOD_HEAD},
- {"options",no_argument,&method,METHOD_OPTIONS},
- {"trace",no_argument,&method,METHOD_TRACE},
- {"version",no_argument,NULL,'V'},
- {"proxy",required_argument,NULL,'p'},
- {"clients",required_argument,NULL,'c'},
- {NULL,0,NULL,0}
+    {"force",   no_argument,        &force,         1},
+    {"reload",  no_argument,        &force_reload,  1},
+    {"time",    required_argument,  NULL,           't'},
+    {"help",    no_argument,        NULL,           '?'},
+    {"http09",  no_argument,        NULL,           '9'},
+    {"http10",  no_argument,        NULL,           '1'},
+    {"http11",  no_argument,        NULL,           '2'},
+    {"get",     no_argument,        &method,        METHOD_GET},
+    {"head",    no_argument,        &method,        METHOD_HEAD},
+    {"options", no_argument,        &method,        METHOD_OPTIONS},
+    {"trace",   no_argument,        &method,        METHOD_TRACE},
+    {"version", no_argument,        NULL,           'V'},
+    {"proxy",   required_argument,  NULL,           'p'},
+    {"clients", required_argument,  NULL,           'c'},
+    {NULL,      0,                  NULL,           0}
 };
 
 /* prototypes */
@@ -82,22 +82,22 @@ static void alarm_handler(int signal)
 static void usage(void)
 {
    fprintf(stderr,
-	"webbench [option]... URL\n"
-	"  -f|--force               Don't wait for reply from server.\n"
-	"  -r|--reload              Send reload request - Pragma: no-cache.\n"
-	"  -t|--time <sec>          Run benchmark for <sec> seconds. Default 30.\n"
-	"  -p|--proxy <server:port> Use proxy server for request.\n"
-	"  -c|--clients <n>         Run <n> HTTP clients at once. Default one.\n"
-	"  -9|--http09              Use HTTP/0.9 style requests.\n"
-	"  -1|--http10              Use HTTP/1.0 protocol.\n"
-	"  -2|--http11              Use HTTP/1.1 protocol.\n"
-	"  --get                    Use GET request method.\n"
-	"  --head                   Use HEAD request method.\n"
-	"  --options                Use OPTIONS request method.\n"
-	"  --trace                  Use TRACE request method.\n"
-	"  -?|-h|--help             This information.\n"
-	"  -V|--version             Display program version.\n"
-	);
+        "webbench [option]... URL\n"
+        "  -f|--force               Don't wait for reply from server.\n"
+        "  -r|--reload              Send reload request - Pragma: no-cache.\n"
+        "  -t|--time <sec>          Run benchmark for <sec> seconds. Default 30.\n"
+        "  -p|--proxy <server:port> Use proxy server for request.\n"
+        "  -c|--clients <n>         Run <n> HTTP clients at once. Default one.\n"
+        "  -9|--http09              Use HTTP/0.9 style requests.\n"
+        "  -1|--http10              Use HTTP/1.0 protocol.\n"
+        "  -2|--http11              Use HTTP/1.1 protocol.\n"
+        "  --get                    Use GET request method.\n"
+        "  --head                   Use HEAD request method.\n"
+        "  --options                Use OPTIONS request method.\n"
+        "  --trace                  Use TRACE request method.\n"
+        "  -?|-h|--help             This information.\n"
+        "  -V|--version             Display program version.\n"
+        );
 };
 
 int main(int argc, char *argv[])
@@ -160,144 +160,148 @@ int main(int argc, char *argv[])
         }
     }
 
- if(optind==argc) {
-                      fprintf(stderr,"webbench: Missing URL!\n");
-		      usage();
-		      return 2;
-                    }
+    if(optind==argc) {
+        fprintf(stderr,"webbench: Missing URL!\n");
+        usage();
+        return 2;
+    }
 
- if(clients==0) clients=1;
- if(benchtime==0) benchtime=60;
- /* Copyright */
- fprintf(stderr,"Webbench - Simple Web Benchmark "PROGRAM_VERSION"\n"
-	 "Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.\n"
-	 );
- build_request(argv[optind]);
- /* print bench info */
- printf("\nBenchmarking: ");
- switch(method)
- {
-	 case METHOD_GET:
-	 default:
-		 printf("GET");break;
-	 case METHOD_OPTIONS:
-		 printf("OPTIONS");break;
-	 case METHOD_HEAD:
-		 printf("HEAD");break;
-	 case METHOD_TRACE:
-		 printf("TRACE");break;
- }
- printf(" %s",argv[optind]);
- switch(http10)
- {
-	 case 0: printf(" (using HTTP/0.9)");break;
-	 case 2: printf(" (using HTTP/1.1)");break;
- }
- printf("\n");
- if(clients==1) printf("1 client");
- else
-   printf("%d clients",clients);
+    if(clients==0) clients=1;
+    if(benchtime==0) benchtime=60;
+    /* Copyright */
+    fprintf(stderr,"Webbench - Simple Web Benchmark "PROGRAM_VERSION"\n"
+                   "Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.\n"
+            );
+    build_request(argv[optind]);
+    /* print bench info */
+    printf("\nBenchmarking: ");
+    switch(method)
+    {
+        case METHOD_GET:
+        default:
+            printf("GET");break;
+        case METHOD_OPTIONS:
+            printf("OPTIONS");break;
+        case METHOD_HEAD:
+            printf("HEAD");break;
+        case METHOD_TRACE:
+            printf("TRACE");break;
+    }
+    printf(" %s",argv[optind]);
+    switch(http10)
+    {
+        case 0: printf(" (using HTTP/0.9)");break;
+        case 2: printf(" (using HTTP/1.1)");break;
+    }
+    printf("\n");
+    if(clients==1) printf("1 client");
+    else
+        printf("%d clients",clients);
 
- printf(", running %d sec", benchtime);
- if(force) printf(", early socket close");
- if(proxyhost!=NULL) printf(", via proxy server %s:%d",proxyhost,proxyport);
- if(force_reload) printf(", forcing reload");
- printf(".\n");
- return bench();
+    printf(", running %d sec", benchtime);
+    if(force) printf(", early socket close");
+    if(proxyhost!=NULL) printf(", via proxy server %s:%d",proxyhost,proxyport);
+    if(force_reload) printf(", forcing reload");
+        printf(".\n");
+    return bench();
 }
 
 void build_request(const char *url)
 {
-  char tmp[10];
-  int i;
+    char tmp[10];
+    int i;
 
-  bzero(host,MAXHOSTNAMELEN);
-  bzero(request,REQUEST_SIZE);
+    bzero(host,MAXHOSTNAMELEN);
+    bzero(request,REQUEST_SIZE);
 
-  if(force_reload && proxyhost!=NULL && http10<1) http10=1;
-  if(method==METHOD_HEAD && http10<1) http10=1;
-  if(method==METHOD_OPTIONS && http10<2) http10=2;
-  if(method==METHOD_TRACE && http10<2) http10=2;
+    if(force_reload && proxyhost!=NULL && http10<1) http10=1;
+    if(method==METHOD_HEAD && http10<1) http10=1;
+    if(method==METHOD_OPTIONS && http10<2) http10=2;
+    if(method==METHOD_TRACE && http10<2) http10=2;
 
-  switch(method)
-  {
-	  default:
-	  case METHOD_GET: strcpy(request,"GET");break;
-	  case METHOD_HEAD: strcpy(request,"HEAD");break;
-	  case METHOD_OPTIONS: strcpy(request,"OPTIONS");break;
-	  case METHOD_TRACE: strcpy(request,"TRACE");break;
-  }
+    switch(method)
+    {
+        default:
+        case METHOD_GET: strcpy(request,"GET");break;
+        case METHOD_HEAD: strcpy(request,"HEAD");break;
+        case METHOD_OPTIONS: strcpy(request,"OPTIONS");break;
+        case METHOD_TRACE: strcpy(request,"TRACE");break;
+    }
 
-  strcat(request," ");
+    strcat(request," ");
 
-  if(NULL==strstr(url,"://"))
-  {
-	  fprintf(stderr, "\n%s: is not a valid URL.\n",url);
-	  exit(2);
-  }
-  if(strlen(url)>1500)
-  {
-         fprintf(stderr,"URL is too long.\n");
-	 exit(2);
-  }
-  if(proxyhost==NULL)
-	   if (0!=strncasecmp("http://",url,7))
-	   { fprintf(stderr,"\nOnly HTTP protocol is directly supported, set --proxy for others.\n");
-             exit(2);
-           }
-  /* protocol/host delimiter */
-  i=strstr(url,"://")-url+3;
-  /* printf("%d\n",i); */
+    if(NULL==strstr(url,"://"))
+    {
+        fprintf(stderr, "\n%s: is not a valid URL.\n",url);
+        exit(2);
+    }
+    if(strlen(url)>1500)
+    {
+        fprintf(stderr,"URL is too long.\n");
+        exit(2);
+    }
+    if(proxyhost==NULL)
+        if (0!=strncasecmp("http://",url,7))
+        {
+            fprintf(stderr,"\nOnly HTTP protocol is directly supported, set --proxy for others.\n");
+            exit(2);
+        }
+    /* protocol/host delimiter */
+    i=strstr(url,"://")-url+3;
+    /* printf("%d\n",i); */
 
-  if(strchr(url+i,'/')==NULL) {
-                                fprintf(stderr,"\nInvalid URL syntax - hostname don't ends with '/'.\n");
-                                exit(2);
-                              }
-  if(proxyhost==NULL)
-  {
-   /* get port from hostname */
-   if(index(url+i,':')!=NULL &&
-      index(url+i,':')<index(url+i,'/'))
-   {
-	   strncpy(host,url+i,strchr(url+i,':')-url-i);
-	   bzero(tmp,10);
-	   strncpy(tmp,index(url+i,':')+1,strchr(url+i,'/')-index(url+i,':')-1);
-	   /* printf("tmp=%s\n",tmp); */
-	   proxyport=atoi(tmp);
-	   if(proxyport==0) proxyport=80;
-   } else
-   {
-     strncpy(host,url+i,strcspn(url+i,"/"));
-   }
-   // printf("Host=%s\n",host);
-   strcat(request+strlen(request),url+i+strcspn(url+i,"/"));
-  } else
-  {
-   // printf("ProxyHost=%s\nProxyPort=%d\n",proxyhost,proxyport);
-   strcat(request,url);
-  }
-  if(http10==1)
-	  strcat(request," HTTP/1.0");
-  else if (http10==2)
-	  strcat(request," HTTP/1.1");
-  strcat(request,"\r\n");
-  if(http10>0)
-	  strcat(request,"User-Agent: WebBench "PROGRAM_VERSION"\r\n");
-  if(proxyhost==NULL && http10>0)
-  {
-	  strcat(request,"Host: ");
-	  strcat(request,host);
-	  strcat(request,"\r\n");
-  }
-  if(force_reload && proxyhost!=NULL)
-  {
-	  strcat(request,"Pragma: no-cache\r\n");
-  }
-  if(http10>1)
-	  strcat(request,"Connection: close\r\n");
-  /* add empty line at end */
-  if(http10>0) strcat(request,"\r\n");
-  // printf("Req=%s\n",request);
+    if(strchr(url+i,'/')==NULL)
+    {
+        fprintf(stderr,"\nInvalid URL syntax - hostname don't ends with '/'.\n");
+        exit(2);
+    }
+    if(proxyhost==NULL)
+    {
+        /* get port from hostname */
+        if(index(url+i,':')!=NULL &&
+           index(url+i,':')<index(url+i,'/'))
+        {
+            strncpy(host,url+i,strchr(url+i,':')-url-i);
+            bzero(tmp,10);
+            strncpy(tmp,index(url+i,':')+1,strchr(url+i,'/')-index(url+i,':')-1);
+            /* printf("tmp=%s\n",tmp); */
+            proxyport=atoi(tmp);
+            if(proxyport==0) proxyport=80;
+        }
+        else
+        {
+            strncpy(host,url+i,strcspn(url+i,"/"));
+        }
+        // printf("Host=%s\n",host);
+        strcat(request+strlen(request),url+i+strcspn(url+i,"/"));
+    }
+    else
+    {
+        // printf("ProxyHost=%s\nProxyPort=%d\n",proxyhost,proxyport);
+        strcat(request,url);
+    }
+    if(http10==1)
+        strcat(request," HTTP/1.0");
+    else if (http10==2)
+        strcat(request," HTTP/1.1");
+    strcat(request,"\r\n");
+    if(http10>0)
+        strcat(request,"User-Agent: WebBench "PROGRAM_VERSION"\r\n");
+    if(proxyhost==NULL && http10>0)
+    {
+        strcat(request,"Host: ");
+        strcat(request,host);
+        strcat(request,"\r\n");
+    }
+    if(force_reload && proxyhost!=NULL)
+    {
+        strcat(request,"Pragma: no-cache\r\n");
+    }
+    if(http10>1)
+        strcat(request,"Connection: close\r\n");
+    /* add empty line at end */
+    if(http10>0) strcat(request,"\r\n");
+    // printf("Req=%s\n",request);
 }
 
 /* vraci system rc error kod */
