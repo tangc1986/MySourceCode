@@ -215,7 +215,7 @@ void build_request(const char *url)
     bzero(request,REQUEST_SIZE);
 
     if(force_reload && proxyhost!=NULL && http10<1) http10=1;
-    if(method==METHOD_HEAD && http10<1) http10=1;
+    if(method==METHOD_HEAD && http10<1) http10=1;           // 这里method和http10要配合起来用?
     if(method==METHOD_OPTIONS && http10<2) http10=2;
     if(method==METHOD_TRACE && http10<2) http10=2;
 
@@ -230,7 +230,7 @@ void build_request(const char *url)
 
     strcat(request," ");
 
-    if(NULL==strstr(url,"://"))
+    if(NULL==strstr(url,"://"))     // strstr(str1,str2) 函数用于判断字符串str2是否是str1的子串。
     {
         fprintf(stderr, "\n%s: is not a valid URL.\n",url);
         exit(2);
@@ -240,8 +240,8 @@ void build_request(const char *url)
         fprintf(stderr,"URL is too long.\n");
         exit(2);
     }
-    if(proxyhost==NULL)
-        if (0!=strncasecmp("http://",url,7))
+    if(proxyhost==NULL)                         // strncasecmp()用来比较参数s1和s2字符串前n个字符，比较时会自动忽略大小写的差异。
+        if (0!=strncasecmp("http://",url,7))    // int strncasecmp(const char *s1, const char *s2, size_t n)
         {
             fprintf(stderr,"\nOnly HTTP protocol is directly supported, set --proxy for others.\n");
             exit(2);
@@ -250,7 +250,7 @@ void build_request(const char *url)
     i=strstr(url,"://")-url+3;
     /* printf("%d\n",i); */
 
-    if(strchr(url+i,'/')==NULL)
+    if(strchr(url+i,'/')==NULL)     // char *strchr(char* _Str,int _Ch)  返回首次出现c的位置的指针
     {
         fprintf(stderr,"\nInvalid URL syntax - hostname don't ends with '/'.\n");
         exit(2);
@@ -258,8 +258,8 @@ void build_request(const char *url)
     if(proxyhost==NULL)
     {
         /* get port from hostname */
-        if(index(url+i,':')!=NULL &&
-           index(url+i,':')<index(url+i,'/'))
+        if(index(url+i,':')!=NULL &&            // char * index( const char *s, int c) 用来找出参数s字符串中
+           index(url+i,':')<index(url+i,'/'))   // 第一个出现的参数c地址，然后将该字符出现的地址返回。
         {
             strncpy(host,url+i,strchr(url+i,':')-url-i);
             bzero(tmp,10);
@@ -281,7 +281,7 @@ void build_request(const char *url)
         strcat(request,url);
     }
     if(http10==1)
-        strcat(request," HTTP/1.0");
+        strcat(request," HTTP/1.0");    // 连接两字符串
     else if (http10==2)
         strcat(request," HTTP/1.1");
     strcat(request,"\r\n");
@@ -307,160 +307,164 @@ void build_request(const char *url)
 /* vraci system rc error kod */
 static int bench(void)
 {
-  int i,j,k;
-  pid_t pid=0;
-  FILE *f;
+    int i,j,k;
+    pid_t pid=0;
+    FILE *f;
 
-  /* check avaibility of target server */
-  i=Socket(proxyhost==NULL?host:proxyhost,proxyport);
-  if(i<0) {
-	   fprintf(stderr,"\nConnect to server failed. Aborting benchmark.\n");
-           return 1;
-         }
-  close(i);
-  /* create pipe */
-  if(pipe(mypipe))
-  {
-	  perror("pipe failed.");
-	  return 3;
-  }
+    /* check avaibility of target server */
+    i=Socket(proxyhost==NULL?host:proxyhost,proxyport);
+    if(i<0)
+    {
+        fprintf(stderr,"\nConnect to server failed. Aborting benchmark.\n");
+        return 1;
+    }
+    close(i);   // 怎么这里直接就close了
+    /* create pipe */
+    if(pipe(mypipe))      // 建立管道
+    {
+        perror("pipe failed.");
+        return 3;
+    }
 
-  /* not needed, since we have alarm() in childrens */
-  /* wait 4 next system clock tick */
-  /*
-  cas=time(NULL);
-  while(time(NULL)==cas)
+    /* not needed, since we have alarm() in childrens */
+    /* wait 4 next system clock tick */
+    /*
+    cas=time(NULL);
+    while(time(NULL)==cas)
         sched_yield();
-  */
+    */
 
-  /* fork childs */
-  for(i=0;i<clients;i++)
-  {
-	   pid=fork();
-	   if(pid <= (pid_t) 0)
-	   {
-		   /* child process or error*/
-	           sleep(1); /* make childs faster */
-		   break;
-	   }
-  }
+    /* fork childs */
+    for(i=0;i<clients;i++)
+    {
+        pid=fork();
+        if(pid <= (pid_t) 0)
+        {
+            /* child process or error*/
+            sleep(1); /* make childs faster */
+            break;
+        }
+    }
 
-  if( pid< (pid_t) 0)
-  {
-          fprintf(stderr,"problems forking worker no. %d\n",i);
-	  perror("fork failed.");
-	  return 3;
-  }
+    if( pid< (pid_t) 0)
+    {
+        fprintf(stderr,"problems forking worker no. %d\n",i);
+        perror("fork failed.");
+        return 3;
+    }
 
-  if(pid== (pid_t) 0)
-  {
-    /* I am a child */
-    if(proxyhost==NULL)
-      benchcore(host,proxyport,request);
-         else
-      benchcore(proxyhost,proxyport,request);
+    if(pid== (pid_t) 0)
+    {
+        /* I am a child */
+        if(proxyhost==NULL)
+            benchcore(host,proxyport,request);
+        else
+            benchcore(proxyhost,proxyport,request);
 
-         /* write results to pipe */
-	 f=fdopen(mypipe[1],"w");
-	 if(f==NULL)
-	 {
-		 perror("open pipe for writing failed.");
-		 return 3;
-	 }
-	 /* fprintf(stderr,"Child - %d %d\n",speed,failed); */
-	 fprintf(f,"%d %d %d\n",speed,failed,bytes);
-	 fclose(f);
-	 return 0;
-  } else
-  {
-	  f=fdopen(mypipe[0],"r");
-	  if(f==NULL)
-	  {
-		  perror("open pipe for reading failed.");
-		  return 3;
-	  }
-	  setvbuf(f,NULL,_IONBF,0);
-	  speed=0;
-          failed=0;
-          bytes=0;
+        /* write results to pipe */
+        f=fdopen(mypipe[1],"w");
+        if(f==NULL)
+        {
+            perror("open pipe for writing failed.");
+            return 3;
+        }
+        /* fprintf(stderr,"Child - %d %d\n",speed,failed); */
+        fprintf(f,"%d %d %d\n",speed,failed,bytes);
+        fclose(f);
+        return 0;
+    }
+    else
+    {
+        f=fdopen(mypipe[0],"r");
+        if(f==NULL)
+        {
+            perror("open pipe for reading failed.");
+            return 3;
+        }
+        setvbuf(f,NULL,_IONBF,0);
+        speed=0;
+        failed=0;
+        bytes=0;
 
-	  while(1)
-	  {
-		  pid=fscanf(f,"%d %d %d",&i,&j,&k);
-		  if(pid<2)
-                  {
-                       fprintf(stderr,"Some of our childrens died.\n");
-                       break;
-                  }
-		  speed+=i;
-		  failed+=j;
-		  bytes+=k;
-		  /* fprintf(stderr,"*Knock* %d %d read=%d\n",speed,failed,pid); */
-		  if(--clients==0) break;
-	  }
-	  fclose(f);
+        while(1)
+        {
+            pid=fscanf(f,"%d %d %d",&i,&j,&k);
+            if(pid<2)
+            {
+                fprintf(stderr,"Some of our childrens died.\n");
+                break;
+            }
+            speed+=i;
+            failed+=j;
+            bytes+=k;
+            /* fprintf(stderr,"*Knock* %d %d read=%d\n",speed,failed,pid); */
+            if(--clients==0) break;
+        }
+        fclose(f);
 
-  printf("\nSpeed=%d pages/min, %d bytes/sec.\nRequests: %d susceed, %d failed.\n",
-		  (int)((speed+failed)/(benchtime/60.0f)),
-		  (int)(bytes/(float)benchtime),
-		  speed,
-		  failed);
-  }
-  return i;
+        printf("\nSpeed=%d pages/min, %d bytes/sec.\nRequests: %d susceed, %d failed.\n",
+                (int)((speed+failed)/(benchtime/60.0f)),
+                (int)(bytes/(float)benchtime),
+                speed,
+                failed);
+    }
+    return i;
 }
 
 void benchcore(const char *host,const int port,const char *req)
 {
- int rlen;
- char buf[1500];
- int s,i;
- struct sigaction sa;
+    int rlen;
+    char buf[1500];
+    int s,i;
+    struct sigaction sa;
 
- /* setup alarm signal handler */
- sa.sa_handler=alarm_handler;
- sa.sa_flags=0;
- if(sigaction(SIGALRM,&sa,NULL))
-    exit(3);
- alarm(benchtime);
+    /* setup alarm signal handler */
+    sa.sa_handler=alarm_handler;
+    sa.sa_flags=0;
+    if(sigaction(SIGALRM,&sa,NULL))    // sigaction函数的功能是检查或修改与指定信号相关联的处理动作
+        exit(3);
+    alarm(benchtime);  // alarm也称为闹钟函数，alarm()用来设置信号SIGALRM在经过参数seconds指定的秒数后传送给目前的进程。
 
- rlen=strlen(req);
- nexttry:while(1)
- {
-    if(timerexpired)
+    rlen=strlen(req);
+nexttry:
+    while(1)
     {
-       if(failed>0)
-       {
-          /* fprintf(stderr,"Correcting failed by signal\n"); */
-          failed--;
-       }
-       return;
-    }
-    s=Socket(host,port);
-    if(s<0) { failed++;continue;}
-    if(rlen!=write(s,req,rlen)) {failed++;close(s);continue;}
-    if(http10==0)
-	    if(shutdown(s,1)) { failed++;close(s);continue;}
-    if(force==0)
-    {
+        if(timerexpired)
+        {
+            if(failed>0)
+            {
+                /* fprintf(stderr,"Correcting failed by signal\n"); */
+                failed--;
+            }
+            return;
+        }
+        s=Socket(host,port);
+        if(s<0) { failed++;continue;}
+        if(rlen!=write(s,req,rlen)) {failed++;close(s);continue;}
+        if(http10==0)
+        if(shutdown(s,1)) { failed++;close(s);continue;}
+        if(force==0)
+        {
             /* read all available data from socket */
-	    while(1)
-	    {
-              if(timerexpired) break;
-	      i=read(s,buf,1500);
-              /* fprintf(stderr,"%d\n",i); */
-	      if(i<0)
-              {
-                 failed++;
-                 close(s);
-                 goto nexttry;
-              }
-	       else
-		       if(i==0) break;
-		       else
-			       bytes+=i;
-	    }
+            while(1)
+            {
+                if(timerexpired) break;
+                i=read(s,buf,1500);
+                /* fprintf(stderr,"%d\n",i); */
+                if(i<0)
+                {
+                    failed++;
+                    close(s);
+                    goto nexttry;
+                }
+                else
+                    if(i==0)
+                        break;
+                    else
+                        bytes+=i;
+            }
+        }
+        if(close(s)) {failed++;continue;}
+        speed++;
     }
-    if(close(s)) {failed++;continue;}
-    speed++;
- }
 }
