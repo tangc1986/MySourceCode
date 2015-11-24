@@ -25,7 +25,7 @@
 #include <signal.h>
 
 /* values */
-volatile int timerexpired=0;
+volatile int timerexpired=0;    // 这个只有至1的地方嘛，什么时候至0?
 int speed=0;
 int failed=0;
 int bytes=0;
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
             case '9': http10=0;break;
             case '1': http10=1;break;
             case '2': http10=2;break;
-            case 'V': printf(PROGRAM_VERSION"\n");exit(0);
+            case 'V': printf(PROGRAM_VERSION"\n");exit(0);      // 为什么这里不用return 0?
             case 't': benchtime=atoi(optarg);break;
             case 'p':
             /* proxy server parsing server:port */
@@ -153,11 +153,11 @@ int main(int argc, char *argv[])
             }
             *tmp='\0';
             proxyport=atoi(tmp+1);break;
-            case ':':
+            case ':':       // 还会读到":"的??
             case 'h':
             case '?': usage();return 2;break;
             case 'c': clients=atoi(optarg);break;
-        }
+        }           // 没有default的话，错误的参数怎么处理?
     }
 
     if(optind==argc) {
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
     }
 
     if(clients==0) clients=1;
-    if(benchtime==0) benchtime=60;
+    if(benchtime==0) benchtime=60;  // 不配是30，配成0就是60了?
     /* Copyright */
     fprintf(stderr,"Webbench - Simple Web Benchmark "PROGRAM_VERSION"\n"
                    "Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.\n"
@@ -244,7 +244,7 @@ void build_request(const char *url)
         if (0!=strncasecmp("http://",url,7))    // int strncasecmp(const char *s1, const char *s2, size_t n)
         {
             fprintf(stderr,"\nOnly HTTP protocol is directly supported, set --proxy for others.\n");
-            exit(2);
+            exit(2);        // 除了http协议，还支持其他协议??
         }
     /* protocol/host delimiter */
     i=strstr(url,"://")-url+3;
@@ -253,7 +253,7 @@ void build_request(const char *url)
     if(strchr(url+i,'/')==NULL)     // char *strchr(char* _Str,int _Ch)  返回首次出现c的位置的指针
     {
         fprintf(stderr,"\nInvalid URL syntax - hostname don't ends with '/'.\n");
-        exit(2);
+        exit(2);        // 必须要是http://xxx.xx.xx/xxx 这样的格式?
     }
     if(proxyhost==NULL)
     {
@@ -278,7 +278,7 @@ void build_request(const char *url)
     else
     {
         // printf("ProxyHost=%s\nProxyPort=%d\n",proxyhost,proxyport);
-        strcat(request,url);
+        strcat(request,url);    // 使用代理时，就不需要获取网站使用的端口号吗?
     }
     if(http10==1)
         strcat(request," HTTP/1.0");    // 连接两字符串
