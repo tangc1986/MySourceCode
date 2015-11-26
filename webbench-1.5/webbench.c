@@ -25,7 +25,7 @@
 #include <signal.h>
 
 /* values */
-volatile int timerexpired=0;    // 这个只有至1的地方嘛，什么时候至0?
+volatile int timerexpired=0;    // 使用信号SIGALRM来操作，benchtime到期后，timerexpired会被置为1，从而结束子进程的运行
 int speed=0;
 int failed=0;
 int bytes=0;
@@ -312,7 +312,7 @@ static int bench(void)
     FILE *f;
 
     /* check avaibility of target server */
-    i=Socket(proxyhost==NULL?host:proxyhost,proxyport);
+    i=Socket(proxyhost==NULL?host:proxyhost,proxyport);     // 这里只是check一下
     if(i<0)
     {
         fprintf(stderr,"\nConnect to server failed. Aborting benchmark.\n");
@@ -337,7 +337,7 @@ static int bench(void)
     /* fork childs */
     for(i=0;i<clients;i++)
     {
-        pid=fork();
+        pid=fork();     // 创建一个与自己几乎完全相同的进程
         if(pid <= (pid_t) 0)
         {
             /* child process or error*/
@@ -369,7 +369,7 @@ static int bench(void)
             return 3;
         }
         /* fprintf(stderr,"Child - %d %d\n",speed,failed); */
-        fprintf(f,"%d %d %d\n",speed,failed,bytes);
+        fprintf(f,"%d %d %d\n",speed,failed,bytes);     // 克隆的是进程，就不存在访问内存冲突的情况了吧?
         fclose(f);
         return 0;
     }
@@ -438,17 +438,36 @@ nexttry:
             }
             return;
         }
-        s=Socket(host,port);
-        if(s<0) { failed++;continue;}
-        if(rlen!=write(s,req,rlen)) {failed++;close(s);continue;}
+
+        s=Socket(host,port);        // 这里才是和目的主机建立连接
+        if(s<0)
+        {
+            failed++;
+            continue;
+        }
+
+        if(rlen!=write(s,req,rlen))
+        {
+            failed++;
+            close(s);
+            continue;
+        }
+
         if(http10==0)
-        if(shutdown(s,1)) { failed++;close(s);continue;}
+            if(shutdown(s,1))
+            {
+                failed++;
+                close(s);
+                continue;
+            }
+
         if(force==0)
         {
             /* read all available data from socket */
             while(1)
             {
-                if(timerexpired) break;
+                if(timerexpired)
+                    break;
                 i=read(s,buf,1500);
                 /* fprintf(stderr,"%d\n",i); */
                 if(i<0)
@@ -458,13 +477,21 @@ nexttry:
                     goto nexttry;
                 }
                 else
+                {
                     if(i==0)
                         break;
                     else
                         bytes+=i;
+                }
             }
         }
-        if(close(s)) {failed++;continue;}
+
+        if(close(s))
+        {
+            failed++;
+            continue;
+        }
+
         speed++;
     }
 }
