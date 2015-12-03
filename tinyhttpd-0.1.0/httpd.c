@@ -22,7 +22,7 @@
 #include <strings.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <pthread.h>
+//#include <pthread.h>
 #include <sys/wait.h>
 #include <stdlib.h>
 
@@ -44,9 +44,9 @@ int startup(u_short *);
 void unimplemented(int);
 
 /**********************************************************************/
-/* A request has caused a call to accept() on the server port to
- * return.  Process the request appropriately.
- * Parameters: the socket connected to the client */
+/* A request has caused a call to accept() on the server port to      */
+/* return.  Process the request appropriately.                        */
+/* Parameters: the socket connected to the client                     */
 /**********************************************************************/
 void accept_request(int client)
 {
@@ -57,11 +57,13 @@ void accept_request(int client)
     char path[512];
     size_t i, j;
     struct stat st;
-    int cgi = 0;      /* becomes true if server decides this is a CGI
-                    * program */
+    int cgi = 0;      /* becomes true if server decides this is a CGI program */
     char *query_string = NULL;
 
-    numchars = get_line(client, buf, sizeof(buf));
+    numchars = get_line(client, buf, sizeof(buf));  // 为什么只读一行?
+
+    printf("numchars = %d, buf = %s\n", numchars, buf);
+
     i = 0;
     j = 0;
     while (!ISspace(buf[j]) && (i < sizeof(method) - 1)) {
@@ -69,12 +71,14 @@ void accept_request(int client)
         i++;
         j++;
     }
-    method[i] = '\0';
-
+    method[i] = '\0';       // 这里只是为了删除空白字符?那为什么method和buf容量相差这么大，buf里面剩下的怎么办?
+                             // 有没有可能buf中空白字符比较多，导致j先超过了1024??
     if (strcasecmp(method, "GET") && strcasecmp(method, "POST")) {
         unimplemented(client);
         return;
     }
+
+    printf("method = %s\n", method);
 
     if (strcasecmp(method, "POST") == 0)
         cgi = 1;
@@ -89,6 +93,8 @@ void accept_request(int client)
     }
     url[i] = '\0';
 
+    printf("url = %s\n", url);
+
     if (strcasecmp(method, "GET") == 0) {
         query_string = url;
         while ((*query_string != '?') && (*query_string != '\0'))
@@ -100,14 +106,19 @@ void accept_request(int client)
         }
     }
 
+    printf("query_string = %s\n", query_string);
+
     sprintf(path, "htdocs%s", url);
     if (path[strlen(path) - 1] == '/')
         strcat(path, "index.html");
-    if (stat(path, &st) == -1) {
+    if (stat(path, &st) == -1)
+    {
         while ((numchars > 0) && strcmp("\n", buf))  /* read & discard headers */
             numchars = get_line(client, buf, sizeof(buf));
         not_found(client);
-    } else {
+    }
+    else
+    {
         if ((st.st_mode & S_IFMT) == S_IFDIR)
             strcat(path, "/index.html");
         if ((st.st_mode & S_IXUSR) ||
@@ -300,11 +311,14 @@ int get_line(int sock, char *buf, int size)
     char c = '\0';
     int n;
 
-    while ((i < size - 1) && (c != '\n')) {
+    while ((i < size - 1) && (c != '\n'))
+    {
         n = recv(sock, &c, 1, 0);
         /* DEBUG printf("%02X\n", c); */
-        if (n > 0) {
-            if (c == '\r') {
+        if (n > 0)
+        {
+            if (c == '\r')
+            {
                 n = recv(sock, &c, 1, MSG_PEEK);
                 /* DEBUG printf("%02X\n", c); */
                 if ((n > 0) && (c == '\n'))
@@ -314,7 +328,8 @@ int get_line(int sock, char *buf, int size)
             }
             buf[i] = c;
             i++;
-        } else
+        }
+        else
             c = '\n';
     }
     buf[i] = '\0';
@@ -466,7 +481,7 @@ int main(void)
     int client_sock = -1;
     struct sockaddr_in client_name;
     int client_name_len = sizeof(client_name);
-    pthread_t newthread;
+    //pthread_t newthread;
 
     server_sock = startup(&port);
     printf("httpd running on port %d\n", port);
@@ -477,9 +492,9 @@ int main(void)
                              &client_name_len);
         if (client_sock == -1)
             error_die("accept");
-        /* accept_request(client_sock); */
-        if (pthread_create(&newthread , NULL, accept_request, client_sock) != 0)
-            perror("pthread_create");
+        accept_request(client_sock);
+        //if (pthread_create(&newthread , NULL, accept_request, client_sock) != 0)
+            //perror("pthread_create");
     }
 
     close(server_sock);
