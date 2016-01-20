@@ -1,0 +1,23 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:647:26: error: minix/config.h: No such file or directory
+configure: In function 'main':
+configure:855: warning: incompatible implicit declaration of built-in function 'exit'
+/usr/bin/ld: cannot find -ldir
+collect2: ld returned 1 exit status
+/usr/bin/ld: cannot find -lx
+collect2: ld returned 1 exit status
+configure: In function 't':
+configure:1201: warning: conflicting types for built-in function 'memchr'
+configure: In function 't':
+configure:1201: warning: conflicting types for built-in function 'strchr'
+/tmp/cc1hWKsL.o: In function `t':
+/home/share/MySourceCode/diff/diffutils-2.7/configure:1201: warning: the use of `tmpnam' is dangerous, better use `mkstemp'
+configure: In function 'main':
+configure:1577: warning: incompatible implicit declaration of built-in function 'exit'
+configure:1604:19: error: vfork.h: No such file or directory
+configure: In function 'main':
+configure:1725: warning: incompatible implicit declaration of built-in function 'exit'
+configure: In function 't':
+configure:1780: warning: conflicting types for built-in function 'vprintf'
