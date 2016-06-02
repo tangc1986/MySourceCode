@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding:utf-8 -*-
 
 ######################################################
 #
@@ -16,7 +17,7 @@ import re
 import requests
 import requests_cache
 import sys
-from . import __version__
+#from . import __version__
 
 from pygments import highlight
 from pygments.lexers import guess_lexer, get_lexer_by_name
@@ -43,7 +44,7 @@ else:
     def u(x):
         return x
 
-
+os.environ['HOWDOI_DISABLE_SSL'] = 'Temp'
 if os.getenv('HOWDOI_DISABLE_SSL'):  # Set http instead of https
     SEARCH_URL = 'http://www.google.com/search?q=site:{0}%20{1}'
     VERIFY_SSL_CERTIFICATE = False
@@ -236,17 +237,17 @@ def get_parser():
                         action='store_true')
     return parser
 
-
+# 总入口
 def command_line_runner():
-    parser = get_parser()
-    args = vars(parser.parse_args())
+    parser = get_parser()   # 解析命令行参数，返回一个parser对象
+    args = vars(parser.parse_args())    # 获取 参数: 值 字典
 
     if args['version']:
         print(__version__)
         return
 
     if args['clear_cache']:
-        _clear_cache()
+        _clear_cache()  # 清理缓存
         print('Cache cleared successfully')
         return
 
