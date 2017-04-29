@@ -25,3 +25,24 @@
     close(utmpfd);
     return 0;
  }
+
+
+ /*
+  * show info()
+  * displays contents of the utmp struct in human readable form
+  * * note * these sizes should not be hardwired
+  */
+show_info(struct utmp * utbufp)
+{
+    printf("%-8.8s", utbufp->ut_name);
+    printf(" ");
+    printf("%-8.8s", utbufp->ut_line);
+    printf(" ");
+    printf("%10ld", utbufp->ut_time);
+    printf(" ");
+#ifdef SHOWHOST
+    printf("%10ld", utbufp->ut_host);
+#endif
+    printf("\n");
+}
+
