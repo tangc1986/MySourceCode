@@ -10,11 +10,11 @@
 
  int main()
  {
-    struct utmp current_record;
-    int utmpfd;
-    int reclen = sizeof(current_record);
+    struct utmp  current_record;
+    int          utmpfd;
+    int          reclen = sizeof(current_record);
 
-    if ((utmpfd = open(UTMP_FILE, O_RDONLY) == -1)
+    if ((utmpfd = open(UTMP_FILE, O_RDONLY)) == -1)
     {
         perror(UTMP_FILE);
         exit(1);
@@ -34,14 +34,14 @@
   */
 show_info(struct utmp * utbufp)
 {
-    printf("%-8.8s", utbufp->ut_name);
+    printf("%-10.10s", utbufp->ut_name);
     printf(" ");
-    printf("%-8.8s", utbufp->ut_line);
+    printf("%-10.10s", utbufp->ut_line);
     printf(" ");
-    printf("%10ld", utbufp->ut_time);
+    printf("%12ld", utbufp->ut_time);
     printf(" ");
 #ifdef SHOWHOST
-    printf("%10ld", utbufp->ut_host);
+    printf("(%s)", utbufp->ut_host);
 #endif
     printf("\n");
 }
